@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Posts</title>
+    <style>
+        .post-card {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .post-form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blog Posts</h1>
+    <div class="post-form">
+        <h2>Add a New Post</h2>
+        <form id="post-form">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required>
+            <br>
+            <label for="content">Content:</label>
+            <textarea id="content" name="content" required></textarea>
+            <br>
+            <button type="submit">Add Post</button>
+        </form>
+    </div>
+    <div id="posts-container"></div>
+
+    <script>
+        async function fetchPosts() {
+            try {
+                const response = await fetch('/api/posts/');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const postsContainer = document.getElementById('posts-container');
+                postsContainer.innerHTML = '';
+                data.forEach(post => {
+                    const postCard = document.createElement('div');
+                    postCard.classList.add('post-card');
+                    postCard.innerHTML = `
+                        <h2>${post.title}</h2>
+                        <p>${post.content}</p>
+                        <small>${new Date(post.created_at).toLocaleString()}</small>
+                    `;
+                    postsContainer.appendChild(postCard);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function addPost(event) {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const postData = { title, content };
+            
+            try {
+                const response = await fetch('/api/posts/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(postData)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                document.getElementById('post-form').reset();
+                fetchPosts(); 
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        document.getElementById('post-form').addEventListener('submit', addPost);
+        fetchPosts();
+    </script>
+</body>
+</html>
